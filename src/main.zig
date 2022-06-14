@@ -18,7 +18,7 @@ fn run(video: *ogc.Video) !void {
         for (Pad.update()) |controller, i| {
             if (controller) {
                 x += Pad.stick_x(i) * speed;
-                y += Pad.stick_y(i) * speed;
+                y -= Pad.stick_y(i) * speed;
                 if (Pad.button_down(.start, i)) std.os.exit(0);
             }
         }
