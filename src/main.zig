@@ -1,7 +1,7 @@
 const std = @import("std");
 const ogc = @import("ogc");
 const Pad = ogc.Pad;
-const rectangle = ogc.utils.rectangle;
+const Rectangle = ogc.Rectangle;
 
 export fn main(_: c_int, _: [*]const [*:0]const u8) void {
     ogc.start(run);
@@ -25,7 +25,10 @@ fn run(video: *ogc.Video) !void {
 
         // Draw square
         video.start();
-        rectangle(ogc.Rectangle.init(x, y, 128, 128), 0xAABBCCFF);
+        var box = Rectangle.init(x, y, 128, 128);
+        box.rotate(box.center(), (x + y) / (video.width + video.height) * 360);
+        box.draw(0xAABBCCFF);
+        box.draw_border(0xCCDDEEFF, 20);
         video.finish();
     }
 }
