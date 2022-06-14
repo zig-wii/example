@@ -49,17 +49,17 @@ pub fn rotate(self: *Rectangle, origo: [2]f32, angle: f32) void {
 pub fn aabb_collides(self: Rectangle, box: Rectangle) bool {
     for (self.area) |point| {
         // horizontal
-        const x1 = box[0][0];
-        const x2 = box[1][0];
+        const x1 = box.area[0][0];
+        const x2 = box.area[1][0];
         const between_x = (point[0] < x2 and point[0] > x1) or (point[0] < x1 and point[0] > x2);
 
         // vertical
-        const y1 = box[0][1];
-        const y2 = box[2][1];
-        const between_y = (point[1] < y2 and point[0] > y1) or (point[1] < y1 and point[1] > y2);
+        const y1 = box.area[0][1];
+        const y2 = box.area[3][1];
+        const between_y = (point[1] < y1 and point[0] > y2) or (point[1] < y2 and point[1] > y1);
 
         // return true if point inside box, accounts for flipping and mirroring
-        return between_x and beween_y;
+        return (between_x and between_y);
     } else return false;
 }
 
