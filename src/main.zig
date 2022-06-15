@@ -11,7 +11,15 @@ fn run(video: *ogc.Video) !void {
     while (true) {
         // Draw square
         video.start();
-        var cube = Cuboid.init(video.width / 2, video.height / 2, 50, 64, 64, 64, 0xAABBCCFF);
+        var cube = Cuboid.init(100, 50, -5, 64, 64, 10, 0xAABBCCFF);
+        cube.set_colors(.{
+            0x000000FF,
+            0xF00000FF,
+            0xFF0000FF,
+            0xFFF000FF,
+            0xFFFF00FF,
+            0xFFFFF0FF,
+        });
         cube.draw();
         video.finish();
     }
