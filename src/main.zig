@@ -8,10 +8,24 @@ export fn main(_: c_int, _: [*]const [*:0]const u8) void {
 }
 
 fn run(video: *ogc.Video) !void {
+    // State
+    var x: f32 = 0;
+    var y: f32 = 0;
     var angle: f32 = 0;
+    const speed: f32 = 0.1;
+
     while (true) {
-        angle += 1;
-        var cube = Cuboid.init(-1, -1, -10, 2, 2, 2, 0xAABBCCFF);
+        // Movement
+        for (Pad.update()) |controller, i| {
+            if (controller) {
+                x += Pad.stick_x(i) * speed;
+                y += Pad.stick_y(i) * speed;
+                if (Pad.button_down(.start, i)) std.os.exit(0);
+            }
+        }
+
+        // Create cuboid with different colors
+        var cube = Cuboid.init(x - 1, y - 1, -10, 2, 2, 2, 0xAABBCCFF);
         cube.set_colors(.{
             0x000000FF,
             0xFF0000FF,
@@ -20,6 +34,9 @@ fn run(video: *ogc.Video) !void {
             0x00FFFFFF,
             0x0000FFFF,
         });
+
+        // Rotation
+        angle += 1;
         const center = cube.center();
         cube.rotate_x(center, angle);
         cube.rotate_z(center, angle / 8);
