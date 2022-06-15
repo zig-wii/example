@@ -4,7 +4,7 @@ const Pad = ogc.Pad;
 const Rectangle = ogc.Rectangle;
 
 export fn main(_: c_int, _: [*]const [*:0]const u8) void {
-    ogc.start(run, .orthographic);
+    ogc.start(run, .perspective);
 }
 
 fn run(video: *ogc.Video) !void {
