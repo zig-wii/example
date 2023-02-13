@@ -33,8 +33,9 @@ pub fn target_wii(builder: *std.build.Builder, comptime options: Options) !*std.
     const obj = builder.addObject(options.name, options.root_src);
     obj.setOutputDir("zig-out");
     obj.linkLibC();
-    obj.setLibCFile(std.build.FileSource{ .path = cwd() ++ "/libc.txt" });
-    obj.addIncludeDir(try print(builder.allocator, "{s}/libogc/include", .{devkitpro}));
+    obj.setLibCFile(std.build.FileSource{ .path = comptime cwd() ++ "/libc.txt" });
+    obj.addIncludePath(try print(builder.allocator, "{s}/libogc/include", .{devkitpro}));
+    obj.addIncludePath(try print(builder.allocator, "{s}/devkitPPC/powerpc-eabi/include", .{devkitpro}));
     obj.setTarget(.{
         .cpu_arch = .powerpc,
         .os_tag = .freestanding,
@@ -105,7 +106,7 @@ fn cwd() []const u8 {
 
 // Runs shell command
 fn command(allocator: std.mem.Allocator, dir: []const u8, argv: []const []const u8) !void {
-    var child = try std.ChildProcess.init(argv, allocator);
+    var child = std.ChildProcess.init(argv, allocator);
     child.cwd = dir;
     child.stderr = std.io.getStdErr();
     child.stdout = std.io.getStdOut();
