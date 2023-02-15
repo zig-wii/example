@@ -29,13 +29,15 @@ pub fn target_wii(builder: *std.build.Builder, comptime options: Options) !*std.
     const ext = if (builtin.target.os.tag == .windows) ".exe" else "";
 
     // set build options
-    const mode = builder.standardReleaseOptions();
+    builder.setPreferredReleaseMode(.Debug);
     const obj = builder.addObject(options.name, options.root_src);
     obj.setOutputDir("zig-out");
     obj.linkLibC();
+    // For some reason, obj.setLibCFile doesn't make a difference on whether the output compiles properly.
     obj.setLibCFile(std.build.FileSource{ .path = comptime cwd() ++ "/libc.txt" });
     obj.addIncludePath(try print(builder.allocator, "{s}/libogc/include", .{devkitpro}));
     obj.addIncludePath(try print(builder.allocator, "{s}/devkitPPC/powerpc-eabi/include", .{devkitpro}));
+    //TODO: set OS other and singlethreaded true (for futex) and don't link to libc? idk
     obj.setTarget(.{
         .cpu_arch = .powerpc,
         .os_tag = .freestanding,
@@ -43,7 +45,9 @@ pub fn target_wii(builder: *std.build.Builder, comptime options: Options) !*std.
         .cpu_model = .{ .explicit = &std.Target.powerpc.cpu.@"750" },
         .cpu_features_add = std.Target.powerpc.featureSet(&.{.hard_float}),
     });
-    obj.setBuildMode(mode);
+    // The line below solves everything I think
+    obj.single_threaded = true;
+    // obj.setBuildMode(mode);
 
     // ensure images in textures are converted to tpl
     if (options.textures) |textures| {
