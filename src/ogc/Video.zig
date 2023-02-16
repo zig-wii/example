@@ -1,5 +1,5 @@
 const c = @import("c.zig");
-const framebuffer = @import("main.zig").framebuffer;
+const std = @import("std");
 
 pub const Video = @This();
 index: u8,
@@ -33,11 +33,16 @@ pub const Camera = union(Display) {
     },
 };
 
+/// Creates a framebuffer from video mode
+pub fn init_framebuffer(mode: *c.GXRModeObj) *anyopaque {
+    return c.MEM_K0_TO_K1(c.SYS_AllocateFramebuffer(mode)) orelse unreachable;
+}
+
 pub fn init(comptime display: Display) Video {
     c.VIDEO_Init();
     var fbi: u8 = 0;
     var mode: *c.GXRModeObj = c.VIDEO_GetPreferredMode(null);
-    var fbs: [2]*anyopaque = .{ framebuffer(mode), framebuffer(mode) };
+    var fbs: [2]*anyopaque = .{ init_framebuffer(mode), init_framebuffer(mode) };
     c.VIDEO_Configure(mode);
     c.VIDEO_SetNextFramebuffer(fbs[fbi]);
     c.VIDEO_SetBlack(false);
@@ -119,6 +124,12 @@ pub fn init(comptime display: Display) Video {
         .height = @intToFloat(f32, height),
         .display = display,
     };
+}
+
+pub fn init_console(self: *Video) void {
+    c.CON_Init(self.framebuffers[0], 20, 20, @floatToInt(c_int, self.height), @floatToInt(c_int, self.width), @floatToInt(c_int, self.width) * 2);
+    var stdout = std.io.getStdOut();
+    stdout.writeAll("\x1b[2;0H") catch |err| @panic(@errorName(err));
 }
 
 pub fn wait_vsync() void {
