@@ -20,37 +20,42 @@ pub fn build(builder: *std.build.Builder) !void {
 
 pub fn target_wii(builder: *std.build.Builder, comptime options: Options) !*std.build.LibExeObjStep {
     // ensure devkitpro is installed
-    const devkitpro = try print(builder.allocator, "{s}/zig-devkitpro", .{builder.build_root});
-    const base_folder = try std.fs.openDirAbsolute(builder.build_root, .{});
+    const devkitpro = try print(builder.allocator, "{s}/zig-devkitpro", .{builder.build_root.path.?});
+    const base_folder = try std.fs.openDirAbsolute(builder.build_root.path.?, .{});
     base_folder.access("zig-devkitpro", .{}) catch |err| if (err == error.FileNotFound) {
         const repository = switch (builtin.target.os.tag) {
             .macos => "https://github.com/zig-wii/devkitpro-mac",
             .windows => "https://github.com/zig-wii/devkitpro-windows",
             else => "https://github.com/zig-wii/devkitpro-linux",
         };
-        try command(builder.allocator, builder.build_root, &.{ "git", "clone", repository, devkitpro });
+        try command(builder.allocator, builder.build_root.path.?, &.{ "git", "clone", repository, devkitpro });
     };
     const ext = if (builtin.target.os.tag == .windows) ".exe" else "";
 
-    // set build options
-    var mode = builder.standardReleaseOptions();
-    const obj = builder.addObject(options.name, options.root_src);
+    // set build options   
+    const build_options = std.build.ObjectOptions {
+        .name = options.name,
+        .root_source_file = std.build.FileSource{ .path = options.root_src},
+        .target = .{
+            .cpu_arch = .powerpc,
+            .os_tag = .freestanding,
+            .abi = .eabi,
+            .cpu_model = .{ .explicit = &std.Target.powerpc.cpu.@"750" },
+            .cpu_features_add = std.Target.powerpc.featureSet(&.{.hard_float}),
+        },
+        // Required to be non-Debug to avoid printing stack traces, which requires stepping through linked libraries (no implementaion for Wii) 
+        .optimize = .ReleaseSafe,
+    };
+    
+    const obj = builder.addObject(build_options);
     obj.setOutputDir("zig-out");
     obj.linkLibC();
     // For some reason, obj.setLibCFile doesn't make a difference on whether the output compiles properly.
     obj.setLibCFile(std.build.FileSource{ .path = comptime cwd() ++ "/libc.txt" });
     obj.addIncludePath(try print(builder.allocator, "{s}/libogc/include", .{devkitpro}));
     obj.addIncludePath(try print(builder.allocator, "{s}/devkitPPC/powerpc-eabi/include", .{devkitpro}));
-    //TODO: set OS other and singlethreaded true (for futex) and don't link to libc? idk
-    obj.setTarget(.{
-        .cpu_arch = .powerpc,
-        .os_tag = .freestanding,
-        .abi = .eabi,
-        .cpu_model = .{ .explicit = &std.Target.powerpc.cpu.@"750" },
-        .cpu_features_add = std.Target.powerpc.featureSet(&.{.hard_float}),
-    });
+    // Force compiler to use futexes instead of pthreads
     obj.single_threaded = true;
-    obj.setBuildMode(mode);
 
     // ensure images in textures are converted to tpl
     if (options.textures) |textures| {
