@@ -38,7 +38,7 @@ pub fn init_framebuffer(mode: *c.GXRModeObj) *anyopaque {
     return c.MEM_K0_TO_K1(c.SYS_AllocateFramebuffer(mode)) orelse unreachable;
 }
 
-pub fn init() Video {
+pub fn init(comptime display: Display) Video {
     c.VIDEO_Init();
     var fbi: u8 = 0;
     var mode: *c.GXRModeObj = c.VIDEO_GetPreferredMode(null);
@@ -122,7 +122,7 @@ pub fn init() Video {
         // .perspective = perspective,
         .width = @intToFloat(f32, width),
         .height = @intToFloat(f32, height),
-        // .display = display,
+        .display = display,
     };
 }
 

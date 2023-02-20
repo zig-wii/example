@@ -13,7 +13,6 @@ pub const heap = .{
     }
 };
 
-// TODO: Implement allocation functions
 fn alloc() void {}
 
 fn resize() void {}

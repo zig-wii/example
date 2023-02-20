@@ -15,8 +15,7 @@ pub const Options = struct {
 };
 
 pub fn build(builder: *std.build.Builder) !void {
-    _ = try target_wii(builder, .{ .root_src = "src/main_wii.zig", .name = "wiiko" });
-    _ = try target_native(builder, .{ .root_src = "src/main_native.zig", .name = "wiiko_native" });
+    _ = try target_wii(builder, .{ .name = "wiiko" });
 }
 
 pub fn target_wii(builder: *std.build.Builder, comptime options: Options) !*std.build.LibExeObjStep {
@@ -111,24 +110,6 @@ pub fn target_wii(builder: *std.build.Builder, comptime options: Options) !*std.
 
     // return obj
     return obj;
-}
-
-pub fn target_native(builder: *std.build.Builder, comptime options: Options) !*std.build.LibExeObjStep {
-    // set build options   
-    const build_options = std.build.ExecutableOptions {
-        .name = options.name,
-        .root_source_file = std.build.FileSource{ .path = options.root_src},
-        // Required to be non-Debug to avoid printing stack traces, which requires stepping through linked libraries (no implementaion for Wii) 
-        .optimize = .Debug,
-    };
-    
-    const native_exe = builder.addExecutable(build_options);
-    native_exe.setOutputDir("zig-out");
-
-    const native_step = builder.step("native", "build native executable");
-    native_step.dependOn(&native_exe.step);
-
-    return native_exe;
 }
 
 fn cwd() []const u8 {
