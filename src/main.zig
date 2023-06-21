@@ -15,7 +15,7 @@ fn run(video: *ogc.Video) !void {
 
     while (true) {
         // Movement
-        for (Pad.update()) |controller, i| {
+        for (Pad.update(), 0..) |controller, i| {
             if (controller) {
                 x += Pad.stick_x(i) * speed;
                 y -= Pad.stick_y(i) * speed;
